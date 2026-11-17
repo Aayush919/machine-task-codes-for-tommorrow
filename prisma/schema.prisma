@@ -1,0 +1,79 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum ChatType {
+  direct
+  group
+}
+
+enum MemberRole {
+  admin
+  member
+}
+
+model User {
+  id              String               @id @default(cuid())
+  name            String
+  email           String?              @unique
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt
+  memberships     ChatMember[]
+  createdChats    Chat[]               @relation("ChatCreator")
+  sentIdempotency MessageIdempotency[] @relation("IdempotencySender")
+}
+
+model Chat {
+  id                  String               @id @default(cuid())
+  type                ChatType
+  title               String?
+  /// Sorted "userA:userB" for direct chats. Makes create-or-get idempotent.
+  directKey           String?              @unique
+  createdById         String
+  createdBy           User                 @relation("ChatCreator", fields: [createdById], references: [id])
+  /// Monotonic per chat. Orders messages when two land in the same millisecond.
+  messageSeq          Int                  @default(0)
+  lastMessageId       String?
+  lastMessageText     String?
+  lastMessageSenderId String?
+  lastMessageAt       DateTime?
+  lastMessageDeleted  Boolean              @default(false)
+  lastMessageSeq      Int?
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+  members             ChatMember[]
+  idempotency         MessageIdempotency[]
+
+  @@index([updatedAt])
+}
+
+model ChatMember {
+  chatId   String
+  userId   String
+  role     MemberRole @default(member)
+  joinedAt DateTime   @default(now())
+  leftAt   DateTime?
+  chat     Chat       @relation(fields: [chatId], references: [id], onDelete: Cascade)
+  user     User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([chatId, userId])
+  @@index([userId, leftAt])
+}
+
+/// Durable dedupe for client retries. Redis alone would forget these on flush.
+model MessageIdempotency {
+  chatId          String
+  senderId        String
+  clientMessageId String
+  messageId       String
+  createdAt       DateTime @default(now())
+  chat            Chat     @relation(fields: [chatId], references: [id], onDelete: Cascade)
+  sender          User     @relation("IdempotencySender", fields: [senderId], references: [id], onDelete: Cascade)
+
+  @@id([chatId, senderId, clientMessageId])
+}

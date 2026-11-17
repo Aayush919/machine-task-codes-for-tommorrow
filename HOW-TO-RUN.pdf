@@ -1,0 +1,183 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>
+endobj
+2 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+3 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Courier >>
+endobj
+4 0 obj
+<< /Length 4232 >>
+stream
+BT /F1 16.00 Tf 0 g 48.00 800.00 Td (Chat backend - how to run) Tj ET
+BT /F2 11.00 Tf 0 g 48.00 776.00 Td (Users, chats, and membership live in PostgreSQL. Messages, read receipts, and last-seen) Tj ET
+BT /F2 11.00 Tf 0 g 48.00 762.00 Td (pointers live in Firestore. The API listens on port 3000. There is no web page.) Tj ET
+BT /F2 11.00 Tf 0 g 48.00 745.00 Td (Redis is optional. It holds unread counts and the send rate limit. BullMQ uses it only after a) Tj ET
+BT /F2 11.00 Tf 0 g 48.00 731.00 Td (message is already saved. If Redis is not running, every required chat API still succeeds.) Tj ET
+BT /F2 11.00 Tf 0 g 48.00 717.00 Td (Unread counts stay at 0 and the rate limit is skipped.) Tj ET
+BT /F2 11.00 Tf 0 g 48.00 700.00 Td (There is no WebSocket. A client sees a new message by calling GET /chat/:chatId/messages) Tj ET
+BT /F2 11.00 Tf 0 g 48.00 686.00 Td (again.) Tj ET
+BT /F1 13.00 Tf 0 g 48.00 663.00 Td (What each part does) Tj ET
+BT /F2 11.00 Tf 0 g 48.00 643.00 Td (PostgreSQL \(required\): users, chats, members, last-message preview, and the message sequence.) Tj ET
+BT /F2 11.00 Tf 0 g 48.00 626.00 Td (Firestore \(required\): message text, timestamp, read receipts, and last seen. Locally this is) Tj ET
+BT /F2 11.00 Tf 0 g 48.00 612.00 Td (the Firestore emulator. The API code is the same code that talks to a real Firebase project.) Tj ET
+BT /F2 11.00 Tf 0 g 48.00 598.00 Td (Remove FIRESTORE_EMULATOR_HOST and set GOOGLE_APPLICATION_CREDENTIALS to use a real project.) Tj ET
+BT /F2 11.00 Tf 0 g 48.00 581.00 Td (Redis \(optional\): unread counts, send rate limit, and the BullMQ queue.) Tj ET
+BT /F2 11.00 Tf 0 g 48.00 564.00 Td (Docker \(optional\): one command that starts PostgreSQL, Redis, the Firestore emulator, and the) Tj ET
+BT /F2 11.00 Tf 0 g 48.00 550.00 Td (API. Java is installed inside the Firestore image. The host machine does not need Java, Node,) Tj ET
+BT /F2 11.00 Tf 0 g 48.00 536.00 Td (or a local database.) Tj ET
+BT /F2 11.00 Tf 0 g 48.00 519.00 Td (This repository does not contain live chat data. The first run creates empty tables and an) Tj ET
+BT /F2 11.00 Tf 0 g 48.00 505.00 Td (empty emulator. Data appears when the APIs are called.) Tj ET
+BT /F1 13.00 Tf 0 g 48.00 482.00 Td (Option 1 - Docker, one command) Tj ET
+BT /F2 11.00 Tf 0 g 48.00 462.00 Td (This is the path to use. It does not need Java on the computer, and it does not bind) Tj ET
+BT /F2 11.00 Tf 0 g 48.00 448.00 Td (PostgreSQL \(5432\) or Redis \(6379\), so a database already running on the machine does not stop) Tj ET
+BT /F2 11.00 Tf 0 g 48.00 434.00 Td (it.) Tj ET
+BT /F2 11.00 Tf 0 g 48.00 417.00 Td (Install Docker, then from the project folder:) Tj ET
+0.9608 0.9608 0.9608 rg 45 377.00 505.00 25.00 re f
+BT /F3 9.50 Tf 0 g 48.00 386.00 Td (docker compose up --build) Tj ET
+BT /F2 11.00 Tf 0 g 48.00 363.00 Td (That starts PostgreSQL, Redis, the Firestore emulator, and the API. Migrations run on startup.) Tj ET
+BT /F2 11.00 Tf 0 g 48.00 349.00 Td (The API is at http://localhost:3000.) Tj ET
+BT /F2 11.00 Tf 0 g 48.00 332.00 Td (Stop it with:) Tj ET
+0.9608 0.9608 0.9608 rg 45 292.00 505.00 25.00 re f
+BT /F3 9.50 Tf 0 g 48.00 301.00 Td (docker compose down) Tj ET
+BT /F2 11.00 Tf 0 g 48.00 278.00 Td (Only two host ports are used: 3000 \(API\) and 8080 \(Firestore emulator\). Those two need to be) Tj ET
+BT /F2 11.00 Tf 0 g 48.00 264.00 Td (free. PostgreSQL and Redis stay inside Docker.) Tj ET
+BT /F1 13.00 Tf 0 g 48.00 241.00 Td (Option 2 - commands, no Docker) Tj ET
+BT /F2 11.00 Tf 0 g 48.00 221.00 Td (Install Node.js 20 or newer, PostgreSQL 16, and Java 21. Java is only for the Firestore) Tj ET
+BT /F2 11.00 Tf 0 g 48.00 207.00 Td (emulator. npm run emulators fails with "Unable to locate a Java Runtime" when Java 21 is) Tj ET
+BT /F2 11.00 Tf 0 g 48.00 193.00 Td (missing. Docker does not have this requirement. Redis is optional.) Tj ET
+BT /F2 11.00 Tf 0 g 48.00 176.00 Td (Create the database once, as a PostgreSQL superuser:) Tj ET
+0.9608 0.9608 0.9608 rg 45 123.00 505.00 38.00 re f
+BT /F3 9.50 Tf 0 g 48.00 145.00 Td (CREATE USER chat WITH PASSWORD 'chat';) Tj ET
+BT /F3 9.50 Tf 0 g 48.00 132.00 Td (CREATE DATABASE chat OWNER chat;) Tj ET
+BT /F2 11.00 Tf 0 g 48.00 109.00 Td (Then:) Tj ET
+endstream
+endobj
+5 0 obj
+<< /Length 3959 >>
+stream
+0.9608 0.9608 0.9608 rg 45 751.00 505.00 51.00 re f
+BT /F3 9.50 Tf 0 g 48.00 786.00 Td (cp .env.example .env) Tj ET
+BT /F3 9.50 Tf 0 g 48.00 773.00 Td (npm install) Tj ET
+BT /F3 9.50 Tf 0 g 48.00 760.00 Td (npm run db:migrate) Tj ET
+BT /F2 11.00 Tf 0 g 48.00 737.00 Td (Terminal 1:) Tj ET
+0.9608 0.9608 0.9608 rg 45 697.00 505.00 25.00 re f
+BT /F3 9.50 Tf 0 g 48.00 706.00 Td (npm run emulators) Tj ET
+BT /F2 11.00 Tf 0 g 48.00 683.00 Td (Terminal 2:) Tj ET
+0.9608 0.9608 0.9608 rg 45 643.00 505.00 25.00 re f
+BT /F3 9.50 Tf 0 g 48.00 652.00 Td (npm run dev) Tj ET
+BT /F2 11.00 Tf 0 g 48.00 629.00 Td (The API is at http://localhost:3000. .env sets PORT=3000. Leave) Tj ET
+BT /F2 11.00 Tf 0 g 48.00 615.00 Td (FIRESTORE_EMULATOR_HOST=127.0.0.1:8080 while using the emulator.) Tj ET
+BT /F2 11.00 Tf 0 g 48.00 598.00 Td (If Redis is not installed, do not start it. GET /health stays OK when PostgreSQL and Firestore) Tj ET
+BT /F2 11.00 Tf 0 g 48.00 584.00 Td (are up. The redis field reads down.) Tj ET
+BT /F1 13.00 Tf 0 g 48.00 561.00 Td (APIs) Tj ET
+BT /F2 11.00 Tf 0 g 48.00 541.00 Td (Base URL is http://localhost:3000. Use the id returned by POST /users and POST /chat/create.) Tj ET
+BT /F2 11.00 Tf 0 g 48.00 527.00 Td (Do not invent user or chat ids. requests.http has one call for every endpoint below.) Tj ET
+BT /F1 10.50 Tf 0 g 48.00 510.00 Td (GET  /health) Tj ET
+BT /F2 10.00 Tf 0 g 48.00 495.50 Td (No body. 200 when Postgres and Firestore are up. redis may be down. 503 if either required store is) Tj ET
+BT /F2 10.00 Tf 0 g 48.00 482.50 Td (down.) Tj ET
+BT /F1 10.50 Tf 0 g 48.00 463.50 Td (POST  /users) Tj ET
+BT /F2 10.00 Tf 0 g 48.00 449.00 Td (Body: { "name", "email"? }. 201 { user: { id, name, email, createdAt } }.) Tj ET
+BT /F1 10.50 Tf 0 g 48.00 430.00 Td (GET  /users) Tj ET
+BT /F2 10.00 Tf 0 g 48.00 415.50 Td (No body. { users } in created order.) Tj ET
+BT /F1 10.50 Tf 0 g 48.00 396.50 Td (GET  /users/:userId) Tj ET
+BT /F2 10.00 Tf 0 g 48.00 382.00 Td (No body. { user }. 404 if the id does not exist.) Tj ET
+BT /F1 10.50 Tf 0 g 48.00 363.00 Td (POST  /chat/create) Tj ET
+BT /F2 10.00 Tf 0 g 48.00 348.50 Td (Body: { "userAId", "userBId" }. Always returns chatId. Same pair, either order, is the same chat. First) Tj ET
+BT /F2 10.00 Tf 0 g 48.00 335.50 Td (call is 201, the next is 200. Body: { chatId, type: "direct", memberIds, created }.) Tj ET
+BT /F1 10.50 Tf 0 g 48.00 316.50 Td (POST  /chat/group) Tj ET
+BT /F2 10.00 Tf 0 g 48.00 302.00 Td (Body: { "creatorId", "title", "memberIds" }. 201 { chatId, type: "group", title, memberIds, created }.) Tj ET
+BT /F2 10.00 Tf 0 g 48.00 289.00 Td (Needs at least two people, at most 200.) Tj ET
+BT /F1 10.50 Tf 0 g 48.00 270.00 Td (GET  /chat/:chatId) Tj ET
+BT /F2 10.00 Tf 0 g 48.00 255.50 Td (Query: userId \(required\). Chat, members, and roles. Caller must be an active member.) Tj ET
+BT /F1 10.50 Tf 0 g 48.00 236.50 Td (PATCH  /chat/:chatId) Tj ET
+BT /F2 10.00 Tf 0 g 48.00 222.00 Td (Body: { "actorId", "title" }. Rename a group. Admin only. { chatId, title }.) Tj ET
+BT /F1 10.50 Tf 0 g 48.00 203.00 Td (POST  /chat/:chatId/members) Tj ET
+BT /F2 10.00 Tf 0 g 48.00 188.50 Td (Body: { "actorId", "userId" }. 201. Add a group member. Admin only. Direct chats reject this.) Tj ET
+BT /F1 10.50 Tf 0 g 48.00 169.50 Td (PATCH  /chat/:chatId/members/:userId) Tj ET
+BT /F2 10.00 Tf 0 g 48.00 155.00 Td (Body: { "actorId", "role" }. role is admin or member. The last admin cannot be demoted.) Tj ET
+BT /F1 10.50 Tf 0 g 48.00 136.00 Td (DELETE  /chat/:chatId/members/:userId) Tj ET
+BT /F2 10.00 Tf 0 g 48.00 121.50 Td (Body: { "actorId" }. Remove someone else. Use leave to remove yourself.) Tj ET
+BT /F1 10.50 Tf 0 g 48.00 102.50 Td (POST  /chat/:chatId/leave) Tj ET
+BT /F2 10.00 Tf 0 g 48.00 88.00 Td (Body: { "userId" }. { chatId, userId, left, promotedUserId }. If the last admin leaves, the) Tj ET
+BT /F2 10.00 Tf 0 g 48.00 75.00 Td (longest-standing other member is promoted.) Tj ET
+endstream
+endobj
+6 0 obj
+<< /Length 3621 >>
+stream
+BT /F1 10.50 Tf 0 g 48.00 800.00 Td (POST  /chat/:chatId/message/send) Tj ET
+BT /F2 10.00 Tf 0 g 48.00 785.50 Td (Body: { "senderId", "text", "clientMessageId"? }. 201, or 200 when that clientMessageId was already) Tj ET
+BT /F2 10.00 Tf 0 g 48.00 772.50 Td (saved. { deduped, message }. Text is required, max 4000 characters.) Tj ET
+BT /F1 10.50 Tf 0 g 48.00 753.50 Td (GET  /chat/:chatId/messages) Tj ET
+BT /F2 10.00 Tf 0 g 48.00 739.00 Td (Query: limit \(1-100, default 50\), cursor, userId \(optional\). Latest page, oldest message first.) Tj ET
+BT /F2 10.00 Tf 0 g 48.00 726.00 Td (nextCursor loads older pages.) Tj ET
+BT /F1 10.50 Tf 0 g 48.00 707.00 Td (PATCH  /chat/:chatId/message/:messageId) Tj ET
+BT /F2 10.00 Tf 0 g 48.00 692.50 Td (Body: { "userId", "text" }. Sender only, within 15 minutes. { message }.) Tj ET
+BT /F1 10.50 Tf 0 g 48.00 673.50 Td (DELETE  /chat/:chatId/message/:messageId) Tj ET
+BT /F2 10.00 Tf 0 g 48.00 659.00 Td (Body: { "userId", "scope"? }. scope is everyone \(default, clears text\) or me \(hides it for that) Tj ET
+BT /F2 10.00 Tf 0 g 48.00 646.00 Td (member\).) Tj ET
+BT /F1 10.50 Tf 0 g 48.00 627.00 Td (POST  /chat/:chatId/message/:messageId/read) Tj ET
+BT /F2 10.00 Tf 0 g 48.00 612.50 Td (Body: { "userId" }. { chatId, messageId, userId, readAt, created }. A second call keeps the original) Tj ET
+BT /F2 10.00 Tf 0 g 48.00 599.50 Td (readAt.) Tj ET
+BT /F1 10.50 Tf 0 g 48.00 580.50 Td (GET  /chat/:chatId/message/:messageId/reads) Tj ET
+BT /F2 10.00 Tf 0 g 48.00 566.00 Td (Query: userId \(required\). { reads: [{ userId, readAt }] }.) Tj ET
+BT /F1 10.50 Tf 0 g 48.00 547.00 Td (POST  /chat/:chatId/lastseen) Tj ET
+BT /F2 10.00 Tf 0 g 48.00 532.50 Td (Body: { "userId", "messageId" }. Moves the pointer forward only. An older message id leaves it where it) Tj ET
+BT /F2 10.00 Tf 0 g 48.00 519.50 Td (is.) Tj ET
+BT /F1 10.50 Tf 0 g 48.00 500.50 Td (GET  /chat/:chatId/lastseen/:userId) Tj ET
+BT /F2 10.00 Tf 0 g 48.00 486.00 Td (No body. { chatId, userId, lastSeenMessageId, lastSeenAt }.) Tj ET
+BT /F1 10.50 Tf 0 g 48.00 467.00 Td (GET  /user/:userId/chats) Tj ET
+BT /F2 10.00 Tf 0 g 48.00 452.50 Td (Query: limit \(1-100, default 50\), cursor. Chats, member ids, last-message preview, unreadCount.) Tj ET
+BT /F2 10.00 Tf 0 g 48.00 439.50 Td (unreadCount stays 0 when Redis is down.) Tj ET
+BT /F1 13.00 Tf 0 g 48.00 414.50 Td (Try it) Tj ET
+BT /F2 11.00 Tf 0 g 48.00 394.50 Td (Create two users, then a chat. Copy each user id into the third call.) Tj ET
+0.9608 0.9608 0.9608 rg 45 315.50 505.00 64.00 re f
+BT /F3 9.50 Tf 0 g 48.00 363.50 Td (curl -s localhost:3000/users -H 'content-type: application/json' -d '{"name":"A"}') Tj ET
+BT /F3 9.50 Tf 0 g 48.00 350.50 Td (curl -s localhost:3000/users -H 'content-type: application/json' -d '{"name":"B"}') Tj ET
+BT /F3 9.50 Tf 0 g 48.00 337.50 Td (curl -s localhost:3000/chat/create -H 'content-type: application/json' \\) Tj ET
+BT /F3 9.50 Tf 0 g 48.00 324.50 Td (  -d '{"userAId":"<a>","userBId":"<b>"}') Tj ET
+BT /F1 13.00 Tf 0 g 48.00 295.50 Td (Tests) Tj ET
+0.9608 0.9608 0.9608 rg 45 252.50 505.00 25.00 re f
+BT /F3 9.50 Tf 0 g 48.00 261.50 Td (npm test) Tj ET
+BT /F2 11.00 Tf 0 g 48.00 238.50 Td (The test command starts the Firestore emulator and runs the suite against PostgreSQL, Redis) Tj ET
+BT /F2 11.00 Tf 0 g 48.00 224.50 Td (database 3, and the emulator. It refuses to run without FIRESTORE_EMULATOR_HOST, so it cannot) Tj ET
+BT /F2 11.00 Tf 0 g 48.00 210.50 Td (touch a real Firebase project. On a machine without Java, use Docker for the API and skip this) Tj ET
+BT /F2 11.00 Tf 0 g 48.00 196.50 Td (command.) Tj ET
+endstream
+endobj
+7 0 obj
+<< /Type /Page /Parent 10 0 R /MediaBox [0 0 595.28 841.89] /Contents 4 0 R /Resources << /Font << /F1 1 0 R /F2 2 0 R /F3 3 0 R >> >> >>
+endobj
+8 0 obj
+<< /Type /Page /Parent 10 0 R /MediaBox [0 0 595.28 841.89] /Contents 5 0 R /Resources << /Font << /F1 1 0 R /F2 2 0 R /F3 3 0 R >> >> >>
+endobj
+9 0 obj
+<< /Type /Page /Parent 10 0 R /MediaBox [0 0 595.28 841.89] /Contents 6 0 R /Resources << /Font << /F1 1 0 R /F2 2 0 R /F3 3 0 R >> >> >>
+endobj
+10 0 obj
+<< /Type /Pages /Count 3 /Kids [7 0 R 8 0 R 9 0 R] >>
+endobj
+11 0 obj
+<< /Type /Catalog /Pages 10 0 R >>
+endobj
+xref
+0 12
+0000000000 65535 f 
+0000000009 00000 n 
+0000000084 00000 n 
+0000000154 00000 n 
+0000000222 00000 n 
+0000004506 00000 n 
+0000008517 00000 n 
+0000012190 00000 n 
+0000012343 00000 n 
+0000012496 00000 n 
+0000012649 00000 n 
+0000012719 00000 n 
+trailer << /Size 12 /Root 11 0 R >>
+startxref
+12770
+%%EOF

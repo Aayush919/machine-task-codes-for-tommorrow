@@ -1,0 +1,156 @@
+### Health
+GET http://localhost:3000/health
+
+### Create user A
+POST http://localhost:3000/users
+Content-Type: application/json
+
+{
+  "name": "A"
+}
+
+### Create user B
+POST http://localhost:3000/users
+Content-Type: application/json
+
+{
+  "name": "B",
+  "email": "b@example.com"
+}
+
+### List users
+GET http://localhost:3000/users
+
+### Get one user
+GET http://localhost:3000/users/USER_A_ID
+
+### Direct chat (201 first time, 200 if the same pair already exists)
+POST http://localhost:3000/chat/create
+Content-Type: application/json
+
+{
+  "userAId": "USER_A_ID",
+  "userBId": "USER_B_ID"
+}
+
+### Group
+POST http://localhost:3000/chat/group
+Content-Type: application/json
+
+{
+  "creatorId": "USER_A_ID",
+  "title": "Standup",
+  "memberIds": ["USER_B_ID", "USER_C_ID"]
+}
+
+### Get a chat
+GET http://localhost:3000/chat/CHAT_ID?userId=USER_A_ID
+
+### Rename a group
+PATCH http://localhost:3000/chat/CHAT_ID
+Content-Type: application/json
+
+{
+  "actorId": "USER_A_ID",
+  "title": "Standup room"
+}
+
+### Add a group member
+POST http://localhost:3000/chat/CHAT_ID/members
+Content-Type: application/json
+
+{
+  "actorId": "USER_A_ID",
+  "userId": "USER_C_ID"
+}
+
+### Change a member role
+PATCH http://localhost:3000/chat/CHAT_ID/members/USER_B_ID
+Content-Type: application/json
+
+{
+  "actorId": "USER_A_ID",
+  "role": "admin"
+}
+
+### Remove a member
+DELETE http://localhost:3000/chat/CHAT_ID/members/USER_C_ID
+Content-Type: application/json
+
+{
+  "actorId": "USER_A_ID"
+}
+
+### Leave a chat
+POST http://localhost:3000/chat/CHAT_ID/leave
+Content-Type: application/json
+
+{
+  "userId": "USER_B_ID"
+}
+
+### Send a message
+POST http://localhost:3000/chat/CHAT_ID/message/send
+Content-Type: application/json
+
+{
+  "senderId": "USER_A_ID",
+  "text": "kal milte hain",
+  "clientMessageId": "client-msg-1"
+}
+
+### List messages
+GET http://localhost:3000/chat/CHAT_ID/messages?limit=50&userId=USER_A_ID
+
+### Edit a message (sender only, within 15 minutes)
+PATCH http://localhost:3000/chat/CHAT_ID/message/MESSAGE_ID
+Content-Type: application/json
+
+{
+  "userId": "USER_A_ID",
+  "text": "kal subah milte hain"
+}
+
+### Delete for everyone
+DELETE http://localhost:3000/chat/CHAT_ID/message/MESSAGE_ID
+Content-Type: application/json
+
+{
+  "userId": "USER_A_ID",
+  "scope": "everyone"
+}
+
+### Delete for me
+DELETE http://localhost:3000/chat/CHAT_ID/message/MESSAGE_ID
+Content-Type: application/json
+
+{
+  "userId": "USER_B_ID",
+  "scope": "me"
+}
+
+### Mark read
+POST http://localhost:3000/chat/CHAT_ID/message/MESSAGE_ID/read
+Content-Type: application/json
+
+{
+  "userId": "USER_B_ID"
+}
+
+### List read receipts
+GET http://localhost:3000/chat/CHAT_ID/message/MESSAGE_ID/reads?userId=USER_A_ID
+
+### Move last seen forward
+POST http://localhost:3000/chat/CHAT_ID/lastseen
+Content-Type: application/json
+
+{
+  "userId": "USER_B_ID",
+  "messageId": "MESSAGE_ID"
+}
+
+### Read last seen
+GET http://localhost:3000/chat/CHAT_ID/lastseen/USER_B_ID
+
+### List a user's chats
+GET http://localhost:3000/user/USER_A_ID/chats?limit=50
